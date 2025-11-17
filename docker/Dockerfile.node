@@ -1,0 +1,26 @@
+### Path: `docker/Dockerfile.node`
+
+# docker/Dockerfile.node
+# Substrate node Docker image
+
+FROM paritytech/ci-linux:production as builder
+
+WORKDIR /energidot
+COPY backend/substrate-node .
+
+RUN cargo build --release
+
+FROM debian:bullseye-slim
+
+RUN apt-get update && apt-get install -y \
+    libssl1.1 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /energidot/target/release/energidot-node /usr/local/bin
+
+EXPOSE 9944 9945 30333
+
+VOLUME ["/data"]
+
+ENTRYPOINT ["/usr/local/bin/energidot-node"]

@@ -1,0 +1,26 @@
+### Path: `docker/Dockerfile.api`
+
+# docker/Dockerfile.api
+# API Gateway Docker image
+
+FROM node:18-alpine as builder
+
+WORKDIR /app
+
+COPY backend/api-gateway/package*.json ./
+RUN npm ci
+
+COPY backend/api-gateway .
+RUN npm run build
+
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+
+EXPOSE 3001
+
+CMD ["node", "dist/server.js"]

@@ -1,0 +1,15 @@
+### Path: `docker/Dockerfile.aggregator`
+
+# docker/Dockerfile.aggregator
+# Data Aggregator Docker image
+
+FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY backend/data-aggregator/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY backend/data-aggregator/src ./src
+
+CMD ["python", "src/main.py"]

@@ -1,0 +1,11 @@
+//### Path: `backend/api-gateway/nodemon.json`
+
+{
+  "watch": ["src"],
+  "ext": "ts,json",
+  "ignore": ["src/**/*.test.ts"],
+  "exec": "ts-node src/server.ts",
+  "env": {
+    "NODE_ENV": "development"
+  }
+}

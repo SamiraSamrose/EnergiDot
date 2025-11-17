@@ -1,0 +1,15 @@
+
+## STEP 4: Backend - Data Aggregator (Python)
+
+### Path: `backend/data-aggregator/requirements.txt`
+aiohttp==3.8.5
+asyncio==3.4.3
+asyncpg==0.28.0
+python-dotenv==1.0.0
+requests==2.31.0
+schedule==1.2.0
+pandas==2.0.3
+numpy==1.25.2
+redis==5.0.0
+psycopg2-binary==2.9.7
+APScheduler==3.10.4

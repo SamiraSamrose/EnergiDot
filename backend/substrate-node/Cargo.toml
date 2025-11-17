@@ -1,0 +1,83 @@
+[package]
+name = "energidot-node"
+version = "1.0.0"
+edition = "2021"
+authors = ["EnergiDot Team"]
+repository = "https://github.com/yourusername/energidot"
+
+[dependencies]
+# Substrate Core
+sc-cli = { version = "0.10.0", features = ["wasmtime"] }
+sc-executor = { version = "0.10.0", features = ["wasmtime"] }
+sc-service = "0.10.0"
+sc-telemetry = "4.0.0"
+sc-keystore = "4.0.0"
+sc-transaction-pool = "4.0.0"
+sc-transaction-pool-api = "4.0.0"
+sc-consensus-aura = "0.10.0"
+sc-consensus = "0.10.0"
+sc-consensus-grandpa = "0.10.0"
+sc-client-api = "4.0.0"
+sc-rpc = "4.0.0"
+sc-basic-authorship = "0.10.0"
+sp-runtime = "7.0.0"
+sp-core = "7.0.0"
+sp-consensus-aura = "0.10.0"
+sp-consensus-grandpa = "4.0.0"
+sp-timestamp = "4.0.0"
+sp-inherents = "4.0.0"
+sp-keyring = "7.0.0"
+sp-api = "4.0.0"
+sp-blockchain = "4.0.0"
+sp-block-builder = "4.0.0"
+
+# Parachain dependencies
+cumulus-client-cli = "0.1.0"
+cumulus-client-consensus-aura = "0.1.0"
+cumulus-client-consensus-common = "0.1.0"
+cumulus-client-service = "0.1.0"
+cumulus-primitives-core = "0.1.0"
+cumulus-primitives-parachain-inherent = "0.1.0"
+cumulus-relay-chain-interface = "0.1.0"
+
+# Frame dependencies
+frame-system = "4.0.0"
+frame-support = "4.0.0"
+pallet-balances = "4.0.0"
+pallet-timestamp = "4.0.0"
+pallet-transaction-payment = "4.0.0"
+pallet-sudo = "4.0.0"
+pallet-aura = "4.0.0"
+
+# Local pallets
+pallet-energy-market = { path = "pallets/energy-market" }
+pallet-dag-consensus = { path = "pallets/dag-consensus" }
+pallet-incentives = { path = "pallets/incentives" }
+
+# Utilities
+clap = { version = "4.0", features = ["derive"] }
+futures = "0.3"
+jsonrpsee = { version = "0.16", features = ["server"] }
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.32", features = ["full"] }
+
+[build-dependencies]
+substrate-build-script-utils = "3.0.0"
+
+[features]
+default = ["std"]
+std = [
+    "sp-runtime/std",
+    "frame-system/std",
+    "pallet-energy-market/std",
+]
+runtime-benchmarks = []
+
+[workspace]
+members = [
+    "node",
+    "runtime",
+    "pallets/energy-market",
+    "pallets/dag-consensus",
+    "pallets/incentives",
+]

@@ -1,0 +1,81 @@
+#Path: backend/substrate-node/node/Cargo.toml
+[package]
+name = "energidot-node"
+version = "1.0.0"
+authors = ["EnergiDot Team"]
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+# Substrate Core
+sc-cli = { version = "0.10.0", features = ["wasmtime"] }
+sc-executor = { version = "0.10.0", features = ["wasmtime"] }
+sc-service = "0.10.0"
+sc-telemetry = "4.0.0"
+sc-keystore = "4.0.0"
+sc-transaction-pool = "4.0.0"
+sc-transaction-pool-api = "4.0.0"
+sc-consensus-aura = "0.10.0"
+sc-consensus = "0.10.0"
+sc-finality-grandpa = "0.10.0"
+sc-client-api = "4.0.0"
+sc-rpc = "4.0.0"
+sc-basic-authorship = "0.10.0"
+sc-network = "0.10.0"
+
+# Substrate Primitives
+sp-runtime = "7.0.0"
+sp-core = "7.0.0"
+sp-consensus-aura = "0.10.0"
+sp-finality-grandpa = "4.0.0"
+sp-timestamp = "4.0.0"
+sp-inherents = "4.0.0"
+sp-keyring = "7.0.0"
+sp-api = "4.0.0"
+sp-blockchain = "4.0.0"
+sp-block-builder = "4.0.0"
+sp-io = "7.0.0"
+sp-session = "4.0.0"
+sp-transaction-pool = "4.0.0"
+
+# Cumulus (Parachain)
+cumulus-client-cli = "0.1.0"
+cumulus-client-consensus-aura = "0.1.0"
+cumulus-client-consensus-common = "0.1.0"
+cumulus-client-service = "0.1.0"
+cumulus-primitives-core = "0.1.0"
+cumulus-primitives-parachain-inherent = "0.1.0"
+cumulus-relay-chain-interface = "0.1.0"
+
+# Frame
+frame-system = "4.0.0"
+frame-support = "4.0.0"
+pallet-transaction-payment = "4.0.0"
+
+# Runtime
+energidot-runtime = { path = "../runtime" }
+
+# CLI
+structopt = "0.3.26"
+clap = { version = "4.0", features = ["derive"] }
+
+# Async
+futures = "0.3.21"
+tokio = { version = "1.32", features = ["macros", "time"] }
+
+# RPC
+jsonrpsee = { version = "0.16", features = ["server"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.0.0" }
+
+# Logging
+log = "0.4.17"
+
+[build-dependencies]
+substrate-build-script-utils = "3.0.0"
+
+[features]
+default = []
+runtime-benchmarks = ["energidot-runtime/runtime-benchmarks"]
