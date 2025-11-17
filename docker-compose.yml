@@ -1,0 +1,121 @@
+## STEP 6: Docker Configuration
+
+### Path: `docker-compose.yml`
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: energidot-postgres
+    environment:
+      POSTGRES_DB: energidot
+      POSTGRES_USER: energidot
+      POSTGRES_PASSWORD: energidot_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - energidot-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U energidot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: energidot-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - energidot-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  substrate-node:
+    build:
+      context: ./backend/substrate-node
+      dockerfile: ../../docker/Dockerfile.node
+    container_name: energidot-substrate-node
+    ports:
+      - "9944:9944"
+      - "9945:9945"
+      - "30333:30333"
+    volumes:
+      - substrate_data:/data
+    networks:
+      - energidot-network
+    command: ["--dev", "--ws-external", "--rpc-external"]
+
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: ../../docker/Dockerfile.api
+    container_name: energidot-api-gateway
+    environment:
+      NODE_ENV: production
+      API_PORT: 3001
+      DATABASE_URL: postgresql://energidot:energidot_pass@postgres:5432/energidot
+      REDIS_URL: redis://redis:6379
+      SUBSTRATE_RPC_URL: ws://substrate-node:9945
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+      - redis
+      - substrate-node
+    networks:
+      - energidot-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  data-aggregator:
+    build:
+      context: ./backend/data-aggregator
+      dockerfile: ../../docker/Dockerfile.aggregator
+    container_name: energidot-data-aggregator
+    environment:
+      DATABASE_URL: postgresql://energidot:energidot_pass@postgres:5432/energidot
+      NREL_API_KEY: ${NREL_API_KEY}
+      EIA_API_KEY: ${EIA_API_KEY}
+      ENTSOE_API_KEY: ${ENTSOE_API_KEY}
+      NOAA_API_KEY: ${NOAA_API_KEY}
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
+    depends_on:
+      - postgres
+    networks:
+      - energidot-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: energidot-frontend
+    environment:
+      VITE_API_URL: http://localhost:3001
+      VITE_WS_URL: ws://localhost:9945
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - energidot-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  substrate_data:
+
+networks:
+  energidot-network:
+    driver: bridge

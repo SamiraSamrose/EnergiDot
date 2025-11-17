@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnergiDot - DePIN Energy Grid Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin: 0 auto;
+            max-width: 1600px;
+            padding: 30px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .nav-tabs {
+            border-bottom: 3px solid var(--primary);
+            margin-bottom: 30px;
+        }
+        
+        .nav-tabs .nav-link {
+            color: var(--dark);
+            font-weight: 600;
+            padding: 15px 20px;
+            border: none;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+        
+        .nav-tabs .nav-link.active {
+            background: var(--primary);
+            color: white;
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .chart-controls select,
+        .chart-controls button {
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .chart-controls select {
+            background: white;
+            color: var(--dark);
+        }
+        
+        .chart-controls button {
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+        }
+        
+        .chart-controls button:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .kpi-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .kpi-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .kpi-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .map-container {
+            height: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #e5e7eb;
+        }
+        
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .leaderboard-table th {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .leaderboard-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .leaderboard-table tr:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .badge-icon {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin: 0 3px;
+            font-size: 0.8rem;
+        }
+        
+        .badge-gold { background: #fbbf24; }
+        .badge-silver { background: #9ca3af; }
+        .badge-bronze { background: #cd7f32; }
+        
+        .graph-frame {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1><i class="fas fa-bolt"></i> EnergiDot Dashboard</h1>
+            <p>DePIN + DAG Energy Grid Management on Polkadot Cloud</p>
+        </div>
+        
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" style="flex: 1;">
+                <button class="nav-link active w-100" data-bs-toggle="tab" data-bs-target="#tab1">Grid & Renewable Intelligence</button>
+            </li>
+            <li class="nav-item" style="flex: 1;">
+                <button class="nav-link w-100" data-bs-toggle="tab" data-bs-target="#tab2">Energy Markets & Trading</button>
+            </li>
+            <li class="nav-item" style="flex: 1;">
+                <button class="nav-link w-100" data-bs-toggle="tab" data-bs-target="#tab3">Carbon & Community</button>
+            </li>
+            <li class="nav-item" style="flex: 1;">
+                <button class="nav-link w-100" data-bs-toggle="tab" data-bs-target="#tab4">System Performance</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content">
+            <!-- Tab 1: Grid & Renewable Intelligence Suite -->
+            <div class="tab-pane fade show active" id="tab1">
+                <!-- Chart 1: Grid Load vs Generation Curve -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Grid Load vs Generation Curve</span>
+                        <div class="chart-controls">
+                            <select id="viz1" onchange="updateVisualization(1)">
+                                <option value="plotly" selected>Plotly Dash + WebGL</option>
+                                <option value="chartjs">Lightweight Canvas/Chart.js</option>
+                                <option value="sparkline">Micro Visualizations</option>
+                            </select>
+                            <select id="window1" onchange="updateWindow(1)">
+                                <option value="24h" selected>24H</option>
+                                <option value="7d">7 Days</option>
+                                <option value="30d">30 Days</option>
+                            </select>
+                            <select id="resolution1" onchange="updateResolution(1)">
+                                <option value="full" selected>Full (All Points)</option>
+                                <option value="downsample">Downsampled</option>
+                                <option value="rolling">Rolling Average</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart1" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 2: Renewable Penetration Index -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Renewable Penetration Index</span>
+                        <div class="chart-controls">
+                            <select id="region2" onchange="initChart2()">
+                                <option>All Regions</option>
+                                <option>North America</option>
+                                <option>Europe</option>
+                                <option>Asia Pacific</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart2" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 3: Personal Energy Usage Timeline -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Personal Energy Usage Timeline</span>
+                        <div class="chart-controls">
+                            <select id="window3" onchange="updateWindow(3)">
+                                <option value="24h" selected>24H</option>
+                                <option value="7d">7 Days</option>
+                                <option value="30d">30 Days</option>
+                            </select>
+                            <select id="energyType3" onchange="initChart3()">
+                                <option>All Types</option>
+                                <option>Solar</option>
+                                <option>Wind</option>
+                                <option>Grid</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart3" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 4: Solar vs Consumption Ratio -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Solar vs Consumption Ratio</span>
+                        <div class="chart-controls">
+                            <select id="chartType4" onchange="updateChartType(4)">
+                                <option value="pie">Pie Chart</option>
+                                <option value="line" selected>Line Chart</option>
+                            </select>
+                            <select id="nodeType4" onchange="initChart4()">
+                                <option>All Households</option>
+                                <option>Individual Nodes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart4" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 5: Renewable Forecast Accuracy -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Renewable Forecast Accuracy Metrics</span>
+                        <div class="chart-controls">
+                            <select id="metric5" onchange="updateMetric(5)">
+                                <option value="mae" selected>MAE</option>
+                                <option value="rmse">RMSE</option>
+                            </select>
+                            <select id="period5" onchange="initChart5()">
+                                <option>Last 7 Days</option>
+                                <option>Last 30 Days</option>
+                                <option>Last Year</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart5" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 6: Demand Prediction Insight -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Demand Prediction Insight</span>
+                    </div>
+                    <div id="chart6" class="graph-frame"></div>
+                </div>
+            </div>
+            
+            <!-- Tab 2: Energy Markets, Trading & Tokenization Hub -->
+            <div class="tab-pane fade" id="tab2">
+                <!-- Chart 7: Energy Market Depth & Trade Volume -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Energy Market Depth & Trade Volume</span>
+                        <div class="chart-controls">
+                            <select id="viz7" onchange="updateVisualization(7)">
+                                <option value="plotly" selected>Plotly Dash + WebGL</option>
+                                <option value="chartjs">Lightweight Canvas/Chart.js</option>
+                            </select>
+                            <select id="chartType7" onchange="updateChartType(7)">
+                                <option value="candle" selected>Candlestick</option>
+                                <option value="histogram">Histogram</option>
+                            </select>
+                            <select id="window7" onchange="updateWindow(7)">
+                                <option value="24h" selected>24H</option>
+                                <option value="7d">7 Days</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart7" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 8: Cross-Parachain Energy Flow -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Cross-Parachain Energy Flow Visualization</span>
+                    </div>
+                    <div id="chart8" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 9: Local Energy Trading Map -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Local Energy Trading Map</span>
+                        <div class="chart-controls">
+                            <button onclick="animateFlows()">Animate Flows</button>
+                            <select id="region9">
+                                <option>Oakland, CA</option>
+                                <option>San Francisco</option>
+                                <option>Berkeley</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart9" class="map-container"></div>
+                </div>
+                
+                <!-- Chart 10: ENRG Token Earnings Dashboard -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>ENRG Token Earnings Dashboard</span>
+                        <div class="chart-controls">
+                            <select id="chartType10" onchange="updateChartType(10)">
+                                <option value="pie" selected>Pie Chart</option>
+                                <option value="bar">Bar Chart</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart10" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 11: Dynamic Token-Impact Graph -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Dynamic Token-Impact Graph</span>
+                        <div class="chart-controls">
+                            <select id="xAxis11" onchange="initChart11()">
+                                <option>Token Price</option>
+                                <option>Trading Volume</option>
+                                <option>Market Cap</option>
+                            </select>
+                            <select id="yAxis11" onchange="initChart11()">
+                                <option>Energy Generated</option>
+                                <option>CO2 Offset</option>
+                                <option>User Count</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart11" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 12: Energy Price vs Weather Correlation -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Energy Price Dynamics vs Weather Correlation</span>
+                        <div class="chart-controls">
+                            <select id="weather12" onchange="initChart12()">
+                                <option>Temperature</option>
+                                <option>Cloud Cover</option>
+                                <option>Wind Speed</option>
+                            </select>
+                            <select id="region12" onchange="initChart12()">
+                                <option>Oakland, CA</option>
+                                <option>All Regions</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart12" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 13: DAG Consensus Efficiency -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>DAG Consensus Efficiency Graph</span>
+                        <div class="chart-controls">
+                            <select id="nodeCount13">
+                                <option>All Nodes</option>
+                                <option>0-100</option>
+                                <option>100-500</option>
+                                <option>500+</option>
+                            </select>
+                            <button onclick="highlightThreshold()">Highlight Threshold</button>
+                        </div>
+                    </div>
+                    <div id="chart13" class="graph-frame"></div>
+                </div>
+            </div>
+            
+            <!-- Tab 3: Carbon, Sustainability & Community Insights -->
+            <div class="tab-pane fade" id="tab3">
+                <!-- Chart 14: Carbon Offset & Emission Avoidance -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Carbon Offset & Emission Avoidance</span>
+                        <div class="chart-controls">
+                            <select id="region14" onchange="initChart14()">
+                                <option>All Regions</option>
+                                <option>North America</option>
+                                <option>Europe</option>
+                            </select>
+                            <select id="source14" onchange="initChart14()">
+                                <option>All Sources</option>
+                                <option>Solar</option>
+                                <option>Wind</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart14" class="graph-frame"></div>
+                </div>
+                
+                <!-- KPI Cards for Individual Carbon Offset -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <i class="fas fa-leaf fa-2x"></i>
+                            <div class="kpi-value">2.4 tons</div>
+                            <div class="kpi-label">CO2 Offset This Year</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card" style="background: linear-gradient(135deg, var(--success), #059669);">
+                            <i class="fas fa-solar-panel fa-2x"></i>
+                            <div class="kpi-value">8,540 kWh</div>
+                            <div class="kpi-label">Renewable Generated</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card" style="background: linear-gradient(135deg, var(--warning), #d97706);">
+                            <i class="fas fa-coins fa-2x"></i>
+                            <div class="kpi-value">1,247 ENRG</div>
+                            <div class="kpi-label">Tokens Earned</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card" style="background: linear-gradient(135deg, var(--danger), #dc2626);">
+                            <i class="fas fa-trophy fa-2x"></i>
+                            <div class="kpi-value">#23</div>
+                            <div class="kpi-label">Community Rank</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chart 15: Neighborhood Energy Impact -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Neighborhood Energy Impact Dashboard</span>
+                    </div>
+                    <div id="chart15" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 16: Community Energy Leaderboard -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Community Energy Leaderboard</span>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>User</th>
+                                    <th>Energy Generated (kWh)</th>
+                                    <th>CO2 Offset (kg)</th>
+                                    <th>ENRG Earned</th>
+                                    <th>Badges</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardBody">
+                                <tr>
+                                    <td>1</td>
+                                    <td>SolarPioneer247</td>
+                                    <td>15,840</td>
+                                    <td>7,920</td>
+                                    <td>2,376</td>
+                                    <td>
+                                        <span class="badge-icon badge-gold">G</span>
+                                        <span class="badge-icon badge-gold">G</span>
+                                        <span class="badge-icon badge-silver">S</span>
+                                    </td>
+                                    <td>9,845</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>GreenGrid_Ninja</td>
+                                    <td>14,230</td>
+                                    <td>7,115</td>
+                                    <td>2,135</td>
+                                    <td>
+                                        <span class="badge-icon badge-gold">G</span>
+                                        <span class="badge-icon badge-silver">S</span>
+                                        <span class="badge-icon badge-silver">S</span>
+                                    </td>
+                                    <td>9,234</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>EcoWarrior_2024</td>
+                                    <td>13,560</td>
+                                    <td>6,780</td>
+                                    <td>2,034</td>
+                                    <td>
+                                        <span class="badge-icon badge-gold">G</span>
+                                        <span class="badge-icon badge-silver">S</span>
+                                        <span class="badge-icon badge-bronze">B</span>
+                                    </td>
+                                    <td>8,890</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>WindPowerPro</td>
+                                    <td>12,890</td>
+                                    <td>6,445</td>
+                                    <td>1,934</td>
+                                    <td>
+                                        <span class="badge-icon badge-silver">S</span>
+                                        <span class="badge-icon badge-silver">S</span>
+                                        <span class="badge-icon badge-bronze">B</span>
+                                    </td>
+                                    <td>8,456</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>CleanEnergyFan</td>
+                                    <td>11,540</td>
+                                    <td>5,770</td>
+                                    <td>1,731</td>
+                                    <td>
+                                        <span class="badge-icon badge-silver">S</span>
+                                        <span class="badge-icon badge-bronze">B</span>
+                                        <span class="badge-icon badge-bronze">B</span>
+                                    </td>
+                                    <td>7,923</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Chart 17: Household Cost Savings -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Household Cost Savings Graph</span>
+                        <div class="chart-controls">
+                            <select id="household17">
+                                <option>My Household</option>
+                                <option>Compare with Neighbor A</option>
+                                <option>Compare with Neighbor B</option>
+                            </select>
+                            <button onclick="overlayPrices()">Overlay Energy Prices</button>
+                        </div>
+                    </div>
+                    <div id="chart17" class="graph-frame"></div>
+                </div>
+            </div>
+            
+            <!-- Tab 4: System Performance, Reliability & Optimization Lab -->
+            <div class="tab-pane fade" id="tab4">
+                <!-- Chart 18: Industrial Energy Node Uptime -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Industrial Energy Node Uptime / Reliability Statistics</span>
+                        <div class="chart-controls">
+                            <select id="window18" onchange="updateWindow(18)">
+                                <option value="24h" selected>24H</option>
+                                <option value="7d">7 Days</option>
+                                <option value="30d">30 Days</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart18" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 19: Performance Benchmarking -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Performance Benchmarking</span>
+                        <div class="chart-controls">
+                            <select id="metric19">
+                                <option value="tps" selected>TPS</option>
+                                <option value="latency">Latency</option>
+                                <option value="gas">Gas Usage</option>
+                            </select>
+                            <select id="nodeType19">
+                                <option>DAG Nodes</option>
+                                <option>Parachain Nodes</option>
+                                <option>Compare Both</option>
+                            </select>
+                            <button onclick="initChart19()">Generate</button>
+                        </div>
+                    </div>
+                    <div id="chart19" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 20: Energy Flow Optimization -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Energy Flow Optimization</span>
+                        <div class="chart-controls">
+                            <button onclick="updateConstraints()">Update Constraints</button>
+                            <button onclick="simulateTrade()">Simulate Trade</button>
+                            <select id="scenario20">
+                                <option>Scenario 1: Peak Demand</option>
+                                <option>Scenario 2: High Solar</option>
+                                <option>Scenario 3: Grid Failure</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="chart20" class="graph-frame"></div>
+                </div>
+                
+                <!-- Chart 21: Grid Stability Index -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>Grid Stability Index</span>
+                        <div class="chart-controls">
+                            <select id="viz21" onchange="updateVisualization(21)">
+                                <option value="plotly" selected>Plotly Dash + WebGL</option>
+                                <option value="chartjs">Lightweight Canvas/Chart.js</option>
+                            </select>
+                            <select id="nodes21">
+                                <option>All Nodes</option>
+                                <option>Critical Nodes Only</option>
+                            </select>
+                            <select id="timeframe21">
+                                <option>Real-time</option>
+                                <option>Historical</option>
+                            </select>
+                            <button onclick="adjustAlertThreshold()">Adjust Alerts</button>
+                        </div>
+                    </div>
+                    <div id="chart21" class="graph-frame"></div>
+                </div>
+                
+                <!-- KPI Cards for System Performance -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <i class="fas fa-server fa-2x"></i>
+                            <div class="kpi-value">99.8%</div>
+                            <div class="kpi-label">System Uptime</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card" style="background: linear-gradient(135deg, var(--success), #059669);">
+                            <i class="fas fa-tachometer-alt fa-2x"></i>
+                            <div class="kpi-value">1,247 TPS</div>
+                            <div class="kpi-label">Current Throughput</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card" style="background: linear-gradient(135deg, var(--warning), #d97706);">
+                            <i class="fas fa-clock fa-2x"></i>
+                            <div class="kpi-value">42 ms</div>
+                            <div class="kpi-label">Avg Latency</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card" style="background: linear-gradient(135deg, var(--danger), #dc2626);">
+                            <i class="fas fa-network-wired fa-2x"></i>
+                            <div class="kpi-value">456</div>
+                            <div class="kpi-label">Active Nodes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Generate realistic time-series data for energy grid
+        function generateTimeSeriesData(hours, baseValue, variance, trend) {
+            trend = trend || 0;
+            const data = [];
+            const now = new Date();
+            for (let i = hours - 1; i >= 0; i--) {
+                const timestamp = new Date(now - i * 3600000);
+                const trendValue = trend * (hours - i) / hours;
+                const randomVariance = (Math.random() - 0.5) * variance;
+                const value = Math.max(0, baseValue + trendValue + randomVariance);
+                data.push({ x: timestamp, y: value });
+            }
+            return data;
+        }
+        
+        // Generate solar generation data (influenced by time of day)
+        function generateSolarData(hours) {
+            const data = [];
+            const now = new Date();
+            for (let i = hours - 1; i >= 0; i--) {
+                const timestamp = new Date(now - i * 3600000);
+                const hour = timestamp.getHours();
+                const solarFactor = Math.max(0, Math.sin((hour - 6) * Math.PI / 12));
+                const value = solarFactor * (800 + Math.random() * 200);
+                data.push({ x: timestamp, y: value });
+            }
+            return data;
+        }
+        
+        // Generate regional heatmap data
+        function generateRegionalData() {
+            const regions = ['North CA', 'South CA', 'Central CA', 'Bay Area', 'LA Basin', 'San Diego'];
+            return regions.map(function(region) {
+                return {
+                    region: region,
+                    penetration: 0.15 + Math.random() * 0.45,
+                    generation: 500 + Math.random() * 1500
+                };
+            });
+        }
+        
+        // CHART 1: Grid Load vs Generation Curve
+        function initChart1() {
+            const loadData = generateTimeSeriesData(24, 3000, 500, 200);
+            const solarData = generateSolarData(24);
+            const windData = generateTimeSeriesData(24, 800, 300, 50);
+            const evData = generateTimeSeriesData(24, 400, 150, 30);
+            
+            const trace1 = {
+                x: loadData.map(function(d) { return d.x; }),
+                y: loadData.map(function(d) { return d.y; }),
+                name: 'Total Load',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#ef4444', width: 3 }
+            };
+            
+            const trace2 = {
+                x: solarData.map(function(d) { return d.x; }),
+                y: solarData.map(function(d) { return d.y; }),
+                name: 'Solar Generation',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#f59e0b', width: 2 }
+            };
+            
+            const trace3 = {
+                x: windData.map(function(d) { return d.x; }),
+                y: windData.map(function(d) { return d.y; }),
+                name: 'Wind Generation',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#10b981', width: 2 }
+            };
+            
+            const trace4 = {
+                x: evData.map(function(d) { return d.x; }),
+                y: evData.map(function(d) { return d.y; }),
+                name: 'EV Node Output',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#6366f1', width: 2 }
+            };
+            
+            const layout = {
+                xaxis: { title: 'Time (Hours)', showgrid: true },
+                yaxis: { title: 'Power (MW)', showgrid: true },
+                hovermode: 'x unified',
+                showlegend: true,
+                legend: { x: 0.1, y: 1.1, orientation: 'h' },
+                margin: { l: 60, r: 30, t: 20, b: 60 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart1', [trace1, trace2, trace3, trace4], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 2: Renewable Penetration Index
+        function initChart2() {
+            const region = document.getElementById('region2').value;
+            let regionalData;
+            
+            if (region === 'North America') {
+                regionalData = [
+                    { region: 'California', penetration: 0.42, generation: 1800 },
+                    { region: 'Texas', penetration: 0.35, generation: 1600 },
+                    { region: 'New York', penetration: 0.28, generation: 1200 },
+                    { region: 'Florida', penetration: 0.22, generation: 900 }
+                ];
+            } else if (region === 'Europe') {
+                regionalData = [
+                    { region: 'Germany', penetration: 0.52, generation: 2100 },
+                    { region: 'Spain', penetration: 0.48, generation: 1900 },
+                    { region: 'UK', penetration: 0.38, generation: 1400 },
+                    { region: 'France', penetration: 0.32, generation: 1300 }
+                ];
+            } else if (region === 'Asia Pacific') {
+                regionalData = [
+                    { region: 'Australia', penetration: 0.45, generation: 1700 },
+                    { region: 'Japan', penetration: 0.30, generation: 1300 },
+                    { region: 'South Korea', penetration: 0.26, generation: 1100 },
+                    { region: 'New Zealand', penetration: 0.55, generation: 1200 }
+                ];
+            } else {
+                regionalData = generateRegionalData();
+            }
+            
+            const trace = {
+                x: regionalData.map(function(d) { return d.region; }),
+                y: regionalData.map(function(d) { return d.penetration * 100; }),
+                type: 'bar',
+                marker: {
+                    color: regionalData.map(function(d) { return d.penetration; }),
+                    colorscale: [[0, '#fee2e2'], [0.5, '#fbbf24'], [1, '#10b981']],
+                    showscale: true,
+                    colorbar: { title: 'Penetration %' }
+                }
+            };
+            
+            const layout = {
+                xaxis: { title: 'Region', showgrid: false },
+                yaxis: { title: 'Renewable Penetration (%)', showgrid: true },
+                margin: { l: 60, r: 30, t: 20, b: 80 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart2', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 3: Personal Energy Usage Timeline
+        function initChart3() {
+            const energyType = document.getElementById('energyType3').value;
+            const hours = 24;
+            const gridData = generateTimeSeriesData(hours, 2, 0.8, 0);
+            const solarData = generateSolarData(hours).map(function(d) { return { x: d.x, y: d.y / 1000 }; });
+            const windData = generateTimeSeriesData(hours, 0.8, 0.4, 0);
+            
+            let traces = [];
+            
+            if (energyType === 'All Types' || energyType === 'Grid') {
+                traces.push({
+                    x: gridData.map(function(d) { return d.x; }),
+                    y: gridData.map(function(d) { return d.y; }),
+                    name: 'Grid Usage',
+                    type: 'scatter',
+                    mode: 'lines',
+                    stackgroup: 'one',
+                    fillcolor: '#6366f1',
+                    line: { color: '#6366f1' }
+                });
+            }
+            
+            if (energyType === 'All Types' || energyType === 'Solar') {
+                traces.push({
+                    x: solarData.map(function(d) { return d.x; }),
+                    y: solarData.map(function(d) { return d.y; }),
+                    name: 'Solar Usage',
+                    type: 'scatter',
+                    mode: 'lines',
+                    stackgroup: 'one',
+                    fillcolor: '#f59e0b',
+                    line: { color: '#f59e0b' }
+                });
+            }
+            
+            if (energyType === 'All Types' || energyType === 'Wind') {
+                traces.push({
+                    x: windData.map(function(d) { return d.x; }),
+                    y: windData.map(function(d) { return d.y; }),
+                    name: 'Wind Usage',
+                    type: 'scatter',
+                    mode: 'lines',
+                    stackgroup: 'one',
+                    fillcolor: '#10b981',
+                    line: { color: '#10b981' }
+                });
+            }
+            
+            const layout = {
+                xaxis: { title: 'Time (Hours)', showgrid: true },
+                yaxis: { title: 'Energy Usage (kWh)', showgrid: true },
+                hovermode: 'x unified',
+                showlegend: true,
+                margin: { l: 60, r: 30, t: 20, b: 60 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart3', traces, layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 4: Solar vs Consumption Ratio
+        function initChart4() {
+            const nodeType = document.getElementById('nodeType4').value;
+            const hours = 24;
+            const now = new Date();
+            
+            if (nodeType === 'Individual Nodes') {
+                const nodes = ['Node A', 'Node B', 'Node C', 'Node D', 'Node E'];
+                const ratios = nodes.map(function() { return 40 + Math.random() * 40; });
+                
+                const trace = {
+                    x: nodes,
+                    y: ratios,
+                    type: 'bar',
+                    marker: { color: '#f59e0b' }
+                };
+                
+                const layout = {
+                    xaxis: { title: 'Household Node', showgrid: false },
+                    yaxis: { title: 'Solar/Consumption Ratio (%)', showgrid: true, range: [0, 100] },
+                    margin: { l: 60, r: 30, t: 20, b: 60 },
+                    plot_bgcolor: '#f8fafc',
+                    paper_bgcolor: 'white'
+                };
+                
+                Plotly.newPlot('chart4', [trace], layout, { responsive: true, displayModeBar: false });
+            } else {
+                const solarRatio = [];
+                
+                for (let i = hours - 1; i >= 0; i--) {
+                    const timestamp = new Date(now - i * 3600000);
+                    const hour = timestamp.getHours();
+                    const solarFactor = Math.max(0, Math.sin((hour - 6) * Math.PI / 12));
+                    const ratio = solarFactor * (0.6 + Math.random() * 0.3);
+                    solarRatio.push({ x: timestamp, y: ratio * 100 });
+                }
+                
+                const trace = {
+                    x: solarRatio.map(function(d) { return d.x; }),
+                    y: solarRatio.map(function(d) { return d.y; }),
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    line: { color: '#f59e0b', width: 3 },
+                    marker: { size: 6 }
+                };
+                
+                const layout = {
+                    xaxis: { title: 'Time (Hours)', showgrid: true },
+                    yaxis: { title: 'Solar/Consumption Ratio (%)', showgrid: true, range: [0, 100] },
+                    margin: { l: 60, r: 30, t: 20, b: 60 },
+                    plot_bgcolor: '#f8fafc',
+                    paper_bgcolor: 'white'
+                };
+                
+                Plotly.newPlot('chart4', [trace], layout, { responsive: true, displayModeBar: false });
+            }
+        }
+        
+        // CHART 5: Renewable Forecast Accuracy
+        function initChart5() {
+            const period = document.getElementById('period5').value;
+            const models = ['LSTM Model', 'ARIMA Model', 'Prophet Model', 'Ensemble'];
+            let mae;
+            
+            if (period === 'Last 30 Days') {
+                mae = [52, 65, 58, 45];
+            } else if (period === 'Last Year') {
+                mae = [38, 48, 44, 32];
+            } else {
+                mae = [45, 58, 52, 38];
+            }
+            
+            const trace = {
+                x: models,
+                y: mae,
+                type: 'bar',
+                marker: { color: '#10b981' }
+            };
+            
+            const layout = {
+                xaxis: { title: 'Forecast Model', showgrid: false },
+                yaxis: { title: 'Mean Absolute Error (MW)', showgrid: true },
+                margin: { l: 60, r: 30, t: 20, b: 80 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart5', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 6: Demand Prediction with Confidence Intervals
+        function initChart6() {
+            const hours = 48;
+            const forecast = [];
+            const upper = [];
+            const lower = [];
+            const now = new Date();
+            const interval = 200;
+            
+            for (let i = 0; i < hours; i++) {
+                const timestamp = new Date(now.getTime() + i * 3600000);
+                const baseValue = 3000 + Math.sin(i * Math.PI / 12) * 500;
+                forecast.push({ x: timestamp, y: baseValue });
+                upper.push({ x: timestamp, y: baseValue + interval });
+                lower.push({ x: timestamp, y: baseValue - interval });
+            }
+            
+            const trace1 = {
+                x: lower.map(function(d) { return d.x; }).concat(upper.map(function(d) { return d.x; }).reverse()),
+                y: lower.map(function(d) { return d.y; }).concat(upper.map(function(d) { return d.y; }).reverse()),
+                fill: 'toself',
+                fillcolor: 'rgba(99, 102, 241, 0.2)',
+                line: { color: 'transparent' },
+                showlegend: true,
+                name: '95% Confidence'
+            };
+            
+            const trace2 = {
+                x: forecast.map(function(d) { return d.x; }),
+                y: forecast.map(function(d) { return d.y; }),
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#6366f1', width: 3 },
+                name: 'Forecast'
+            };
+            
+            const layout = {
+                xaxis: { title: 'Time (Hours)', showgrid: true },
+                yaxis: { title: 'Predicted Demand (MW)', showgrid: true },
+                hovermode: 'x unified',
+                margin: { l: 60, r: 30, t: 20, b: 60 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart6', [trace1, trace2], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 7: Energy Market Depth (Candlestick chart)
+        function initChart7() {
+            const chartType = document.getElementById('chartType7').value;
+            const days = 7;
+            
+            if (chartType === 'histogram') {
+                const volumes = [];
+                for (let i = 0; i < 24; i++) {
+                    volumes.push({ hour: i, volume: 5000 + Math.random() * 3000 });
+                }
+                
+                const trace = {
+                    x: volumes.map(function(d) { return d.hour + ':00'; }),
+                    y: volumes.map(function(d) { return d.volume; }),
+                    type: 'bar',
+                    marker: { color: '#6366f1' }
+                };
+                
+                const layout = {
+                    xaxis: { title: 'Hour of Day', showgrid: false },
+                    yaxis: { title: 'Trade Volume', showgrid: true },
+                    margin: { l: 60, r: 30, t: 20, b: 60 },
+                    plot_bgcolor: '#f8fafc',
+                    paper_bgcolor: 'white'
+                };
+                
+                Plotly.newPlot('chart7', [trace], layout, { responsive: true, displayModeBar: false });
+            } else {
+                const candleData = [];
+                
+                for (let i = days - 1; i >= 0; i--) {
+                    const date = new Date(Date.now() - i * 86400000);
+                    const open = 0.08 + Math.random() * 0.04;
+                    const close = open + (Math.random() - 0.5) * 0.02;
+                    const high = Math.max(open, close) + Math.random() * 0.01;
+                    const low = Math.min(open, close) - Math.random() * 0.01;
+                    
+                    candleData.push({
+                        x: date,
+                        open: open,
+                        high: high,
+                        low: low,
+                        close: close
+                    });
+                }
+                
+                const trace = {
+                    x: candleData.map(function(d) { return d.x; }),
+                    open: candleData.map(function(d) { return d.open; }),
+                    high: candleData.map(function(d) { return d.high; }),
+                    low: candleData.map(function(d) { return d.low; }),
+                    close: candleData.map(function(d) { return d.close; }),
+                    type: 'candlestick',
+                    increasing: { line: { color: '#10b981' } },
+                    decreasing: { line: { color: '#ef4444' } }
+                };
+                
+                const layout = {
+                    xaxis: { title: 'Date', showgrid: true },
+                    yaxis: { title: 'ENRG Token Price (USD)', showgrid: true },
+                    margin: { l: 60, r: 30, t: 20, b: 60 },
+                    plot_bgcolor: '#f8fafc',
+                    paper_bgcolor: 'white'
+                };
+                
+                Plotly.newPlot('chart7', [trace], layout, { responsive: true, displayModeBar: false });
+            }
+        }
+        
+        // CHART 8: Cross-Parachain Energy Flow (Sankey diagram)
+        function initChart8() {
+            const nodeLabels = ['EnergiDot', 'Bitgreen', 'Energy Web', 'AssetHub', 'Carbon Credits', 'Energy Tokens', 'IoT Data'];
+            const sources = [0, 0, 0, 1, 2, 3];
+            const targets = [1, 2, 3, 4, 5, 6];
+            const values = [120, 85, 95, 120, 85, 95];
+            
+            const trace = {
+                type: 'sankey',
+                node: {
+                    pad: 15,
+                    thickness: 20,
+                    line: { color: 'white', width: 0.5 },
+                    label: nodeLabels,
+                    color: ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#059669', '#fbbf24', '#ef4444']
+                },
+                link: {
+                    source: sources,
+                    target: targets,
+                    value: values,
+                    color: sources.map(function() { return 'rgba(99, 102, 241, 0.3)'; })
+                }
+            };
+            
+            const layout = {
+                font: { size: 12 },
+                margin: { l: 20, r: 20, t: 20, b: 20 },
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart8', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 9: Local Energy Trading Map
+        function initChart9() {
+            const region = document.getElementById('region9').value;
+            const mapDiv = document.getElementById('chart9');
+            
+            let regionText = region;
+            let nodes = 47;
+            
+            if (region === 'San Francisco') {
+                nodes = 62;
+            } else if (region === 'Berkeley') {
+                nodes = 38;
+            }
+            
+            mapDiv.innerHTML = '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 1.2rem; position: relative;"><div style="position: absolute; top: 20px; left: 20px; font-size: 0.9rem; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px;"><div>Region: ' + regionText + '</div><div>Active Nodes: ' + nodes + '</div><div>Avg Price: $0.09/kWh</div></div><div style="text-align: center;"><i class="fas fa-map-marked-alt fa-3x mb-3"></i><p>Interactive Trading Map</p><p style="font-size: 0.9rem; opacity: 0.8;">' + regionText + ' - ' + nodes + ' Active Trading Nodes</p><p style="font-size: 0.9rem; opacity: 0.8;">Real-time energy flows visualization</p></div></div>';
+        }
+        
+        // CHART 10: ENRG Token Earnings (Pie chart)
+        function initChart10() {
+            const values = [450, 320, 280, 150, 47];
+            
+            const trace = {
+                labels: ['Solar Generation', 'Wind Contribution', 'Grid Balancing', 'Data Validation', 'Trading Fees'],
+                values: values,
+                type: 'pie',
+                marker: {
+                    colors: ['#f59e0b', '#10b981', '#6366f1', '#8b5cf6', '#ef4444']
+                },
+                textinfo: 'label+percent',
+                textposition: 'outside'
+            };
+            
+            const layout = {
+                showlegend: true,
+                margin: { l: 20, r: 20, t: 20, b: 20 },
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart10', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 11: Dynamic Token-Impact Scatter
+        function initChart11() {
+            const xAxis = document.getElementById('xAxis11').value;
+            const yAxis = document.getElementById('yAxis11').value;
+            const points = 50;
+            const data = [];
+            
+            for (let i = 0; i < points; i++) {
+                let xVal, yVal;
+                
+                if (xAxis === 'Trading Volume') {
+                    xVal = 50000 + Math.random() * 100000;
+                } else if (xAxis === 'Market Cap') {
+                    xVal = 1000000 + Math.random() * 2000000;
+                } else {
+                    xVal = 0.05 + Math.random() * 0.15;
+                }
+                
+                if (yAxis === 'CO2 Offset') {
+                    yVal = 100 + Math.random() * 300;
+                } else if (yAxis === 'User Count') {
+                    yVal = 500 + Math.random() * 1000;
+                } else {
+                    yVal = 500 + Math.random() * 1500;
+                }
+                
+                data.push({ x: xVal, y: yVal, size: 5 + Math.random() * 15 });
+            }
+            
+            const trace = {
+                x: data.map(function(d) { return d.x; }),
+                y: data.map(function(d) { return d.y; }),
+                mode: 'markers',
+                type: 'scatter',
+                marker: {
+                    size: data.map(function(d) { return d.size; }),
+                    color: data.map(function(d) { return d.y; }),
+                    colorscale: [[0, '#6366f1'], [1, '#10b981']],
+                    showscale: true,
+                    colorbar: { title: yAxis.split(' ')[0] }
+                }
+            };
+            
+            const layout = {
+                xaxis: { title: xAxis, showgrid: true },
+                yaxis: { title: yAxis, showgrid: true },
+                margin: { l: 60, r: 60, t: 20, b: 60 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart11', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 12: Energy Price vs Weather Correlation
+        function initChart12() {
+            const weather = document.getElementById('weather12').value;
+            const region = document.getElementById('region12').value;
+            const hours = 24;
+            const data = [];
+            const now = new Date();
+            
+            for (let i = hours - 1; i >= 0; i--) {
+                const timestamp = new Date(now - i * 3600000);
+                let xVal, yVal;
+                
+                if (weather === 'Cloud Cover') {
+                    xVal = 20 + Math.random() * 60;
+                    yVal = 0.08 + (xVal / 100) * 0.03 + Math.random() * 0.01;
+                } else if (weather === 'Wind Speed') {
+                    xVal = 5 + Math.random() * 25;
+                    yVal = 0.08 + (30 - xVal) * 0.002 + Math.random() * 0.01;
+                } else {
+                    xVal = 55 + Math.random() * 25;
+                    yVal = 0.08 + (xVal - 55) * 0.002 + Math.random() * 0.02;
+                }
+                
+                data.push({ x: xVal, y: yVal, time: timestamp });
+            }
+            
+            const trace = {
+                x: data.map(function(d) { return d.x; }),
+                y: data.map(function(d) { return d.y; }),
+                mode: 'markers',
+                type: 'scatter',
+                marker: {
+                    size: 10,
+                    color: data.map(function(d) { return d.y; }),
+                    colorscale: [[0, '#10b981'], [1, '#ef4444']],
+                    showscale: true,
+                    colorbar: { title: 'Price' }
+                },
+                text: data.map(function(d) { return d.time.toLocaleTimeString(); })
+            };
+            
+            let xTitle = weather === 'Cloud Cover' ? 'Cloud Cover (%)' : 
+                        weather === 'Wind Speed' ? 'Wind Speed (mph)' : 'Temperature (°F)';
+            
+            const layout = {
+                xaxis: { title: xTitle, showgrid: true },
+                yaxis: { title: 'Energy Price (USD/kWh)', showgrid: true },
+                margin: { l: 60, r: 60, t: 20, b: 60 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart12', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 13: DAG Consensus Efficiency
+        function initChart13() {
+            const points = 40;
+            const data = [];
+            
+            for (let i = 0; i < points; i++) {
+                const nodes = 10 + i * 25;
+                const latency = 20 + Math.log(nodes) * 15 + Math.random() * 20;
+                data.push({ x: nodes, y: latency });
+            }
+            
+            const trace = {
+                x: data.map(function(d) { return d.x; }),
+                y: data.map(function(d) { return d.y; }),
+                mode: 'markers',
+                type: 'scatter',
+                marker: {
+                    size: 8,
+                    color: '#6366f1'
+                }
+            };
+            
+            const layout = {
+                xaxis: { title: 'Node Count', showgrid: true },
+                yaxis: { title: 'Latency (ms)', showgrid: true },
+                margin: { l: 60, r: 30, t: 20, b: 60 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart13', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 14: Carbon Offset (Area chart)
+        function initChart14() {
+            const region = document.getElementById('region14').value;
+            const source = document.getElementById('source14').value;
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            let co2Offset;
+            
+            if (region === 'North America') {
+                co2Offset = months.map(function() { return 180 + Math.random() * 120; });
+            } else if (region === 'Europe') {
+                co2Offset = months.map(function() { return 200 + Math.random() * 140; });
+            } else {
+                co2Offset = months.map(function() { return 150 + Math.random() * 100; });
+            }
+            
+            if (source === 'Solar') {
+                co2Offset = co2Offset.map(function(v) { return v * 0.6; });
+            } else if (source === 'Wind') {
+                co2Offset = co2Offset.map(function(v) { return v * 0.4; });
+            }
+            
+            const trace = {
+                x: months,
+                y: co2Offset,
+                type: 'scatter',
+                mode: 'lines',
+                fill: 'tozeroy',
+                fillcolor: 'rgba(16, 185, 129, 0.3)',
+                line: { color: '#10b981', width: 3 }
+            };
+            
+            const layout = {
+                xaxis: { title: 'Month', showgrid: false },
+                yaxis: { title: 'CO2 Offset (tons)', showgrid: true },
+                margin: { l: 60, r: 30, t: 20, b: 60 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart14', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 15: Neighborhood Energy Impact
+        function initChart15() {
+            const households = ['House A', 'House B', 'House C', 'House D', 'House E', 'House F'];
+            const generation = households.map(function() { return 400 + Math.random() * 600; });
+            
+            const trace = {
+                x: households,
+                y: generation,
+                type: 'bar',
+                marker: {
+                    color: generation,
+                    colorscale: [[0, '#6366f1'], [1, '#10b981']],
+                    showscale: false
+                }
+            };
+            
+            const layout = {
+                xaxis: { title: 'Household', showgrid: false },
+                yaxis: { title: 'Energy Generated (kWh)', showgrid: true },
+                margin: { l: 60, r: 30, t: 20, b: 80 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart15', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 17: Household Cost Savings
+        function initChart17() {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const withSolar = months.map(function() { return 80 + Math.random() * 40; });
+            const withoutSolar = withSolar.map(function(v) { return v + 60 + Math.random() * 30; });
+            
+            const trace1 = {
+                x: months,
+                y: withoutSolar,
+                name: 'Without Solar',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#ef4444', width: 2 }
+            };
+            
+            const trace2 = {
+                x: months,
+                y: withSolar,
+                name: 'With Solar',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#10b981', width: 2 }
+            };
+            
+            const layout = {
+                xaxis: { title: 'Month', showgrid: false },
+                yaxis: { title: 'Energy Cost (USD)', showgrid: true },
+                showlegend: true,
+                margin: { l: 60, r: 30, t: 20, b: 60 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart17', [trace1, trace2], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 18: Industrial Energy Node Uptime
+        function initChart18() {
+            const hours = 24;
+            const uptimeData = [];
+            const latencyData = [];
+            const now = new Date();
+            const uptimeBase = 95;
+            const latencyBase = 30;
+            
+            for (let i = hours - 1; i >= 0; i--) {
+                const timestamp = new Date(now - i * 3600000);
+                const uptime = uptimeBase + Math.random() * 3;
+                const latency = latencyBase + Math.random() * 20;
+                uptimeData.push({ x: timestamp, y: uptime });
+                latencyData.push({ x: timestamp, y: latency });
+            }
+            
+            const trace1 = {
+                x: uptimeData.map(function(d) { return d.x; }),
+                y: uptimeData.map(function(d) { return d.y; }),
+                name: 'Uptime %',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#10b981', width: 3 },
+                yaxis: 'y'
+            };
+            
+            const trace2 = {
+                x: latencyData.map(function(d) { return d.x; }),
+                y: latencyData.map(function(d) { return d.y; }),
+                name: 'Latency (ms)',
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#f59e0b', width: 2 },
+                yaxis: 'y2'
+            };
+            
+            const layout = {
+                xaxis: { title: 'Time (Hours)', showgrid: true },
+                yaxis: { 
+                    title: 'Uptime (%)', 
+                    showgrid: true,
+                    range: [90, 100]
+                },
+                yaxis2: {
+                    title: 'Latency (ms)',
+                    overlaying: 'y',
+                    side: 'right',
+                    showgrid: false
+                },
+                hovermode: 'x unified',
+                showlegend: true,
+                margin: { l: 60, r: 60, t: 20, b: 60 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart18', [trace1, trace2], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 19: Performance Benchmarking
+        function initChart19() {
+            const metric = document.getElementById('metric19').value;
+            const nodeType = document.getElementById('nodeType19').value;
+            let metrics, values;
+            
+            if (nodeType === 'Parachain Nodes') {
+                metrics = ['Parachain Nodes'];
+                if (metric === 'latency') {
+                    values = [78];
+                } else if (metric === 'gas') {
+                    values = [0.0041];
+                } else {
+                    values = [856];
+                }
+            } else if (nodeType === 'Compare Both') {
+                metrics = ['DAG Nodes', 'Parachain Nodes'];
+                if (metric === 'latency') {
+                    values = [42, 78];
+                } else if (metric === 'gas') {
+                    values = [0.0023, 0.0041];
+                } else {
+                    values = [1247, 856];
+                }
+            } else {
+                metrics = ['DAG Nodes'];
+                if (metric === 'latency') {
+                    values = [42];
+                } else if (metric === 'gas') {
+                    values = [0.0023];
+                } else {
+                    values = [1247];
+                }
+            }
+            
+            const trace = {
+                x: metrics,
+                y: values,
+                type: 'bar',
+                marker: {
+                    color: metrics.map(function(m) { 
+                        return m === 'DAG Nodes' ? '#6366f1' : '#8b5cf6';
+                    })
+                }
+            };
+            
+            let yTitle = metric === 'latency' ? 'Average Latency (ms)' :
+                        metric === 'gas' ? 'Gas Usage (ENRG)' : 'Transactions Per Second (TPS)';
+            
+            const layout = {
+                xaxis: { title: 'Node Type', showgrid: false },
+                yaxis: { title: yTitle, showgrid: true },
+                margin: { l: 60, r: 30, t: 20, b: 80 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart19', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 20: Energy Flow Optimization
+        function initChart20() {
+            const nodes = ['Node A', 'Node B', 'Node C', 'Node D', 'Node E'];
+            const beforeOptimization = nodes.map(function() { return 15 + Math.random() * 10; });
+            const afterOptimization = beforeOptimization.map(function(v) { return v * (0.6 + Math.random() * 0.2); });
+            
+            const trace1 = {
+                x: nodes,
+                y: beforeOptimization,
+                name: 'Before Optimization',
+                type: 'bar',
+                marker: { color: '#ef4444' }
+            };
+            
+            const trace2 = {
+                x: nodes,
+                y: afterOptimization,
+                name: 'After Optimization',
+                type: 'bar',
+                marker: { color: '#10b981' }
+            };
+            
+            const layout = {
+                xaxis: { title: 'Energy Node', showgrid: false },
+                yaxis: { title: 'Energy Loss (%)', showgrid: true },
+                barmode: 'group',
+                showlegend: true,
+                margin: { l: 60, r: 30, t: 20, b: 80 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart20', [trace1, trace2], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // CHART 21: Grid Stability Index
+        function initChart21() {
+            const hours = 24;
+            const stabilityData = [];
+            const now = new Date();
+            
+            for (let i = hours - 1; i >= 0; i--) {
+                const timestamp = new Date(now - i * 3600000);
+                const stability = 75 + Math.random() * 20;
+                stabilityData.push({ x: timestamp, y: stability });
+            }
+            
+            const trace = {
+                x: stabilityData.map(function(d) { return d.x; }),
+                y: stabilityData.map(function(d) { return d.y; }),
+                type: 'scatter',
+                mode: 'lines',
+                fill: 'tozeroy',
+                fillcolor: 'rgba(99, 102, 241, 0.3)',
+                line: { color: '#6366f1', width: 3 }
+            };
+            
+            const layout = {
+                xaxis: { title: 'Time (Hours)', showgrid: true },
+                yaxis: { title: 'Stability Index', showgrid: true, range: [0, 100] },
+                shapes: [{
+                    type: 'line',
+                    x0: stabilityData[0].x,
+                    x1: stabilityData[stabilityData.length - 1].x,
+                    y0: 70,
+                    y1: 70,
+                    line: {
+                        color: '#ef4444',
+                        width: 2,
+                        dash: 'dash'
+                    }
+                }],
+                annotations: [{
+                    x: stabilityData[Math.floor(stabilityData.length / 2)].x,
+                    y: 70,
+                    text: 'Alert Threshold',
+                    showarrow: false,
+                    yshift: 10,
+                    font: { color: '#ef4444' }
+                }],
+                margin: { l: 60, r: 30, t: 20, b: 60 },
+                plot_bgcolor: '#f8fafc',
+                paper_bgcolor: 'white'
+            };
+            
+            Plotly.newPlot('chart21', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+        
+        // Interactive control functions
+        function updateVisualization(chartNum) {
+            console.log('Updating visualization for chart ' + chartNum);
+            if (chartNum === 1) initChart1();
+            else if (chartNum === 2) initChart2();
+            else if (chartNum === 3) initChart3();
+            else if (chartNum === 7) initChart7();
+            else if (chartNum === 12) initChart12();
+            else if (chartNum === 14) initChart14();
+            else if (chartNum === 18) initChart18();
+            else if (chartNum === 21) initChart21();
+        }
+        
+        function updateWindow(chartNum) {
+            console.log('Updating window for chart ' + chartNum);
+            if (chartNum === 1) initChart1();
+            else if (chartNum === 3) initChart3();
+            else if (chartNum === 7) initChart7();
+            else if (chartNum === 18) initChart18();
+        }
+        
+        function updateResolution(chartNum) {
+            console.log('Updating resolution for chart ' + chartNum);
+            if (chartNum === 1) initChart1();
+        }
+        
+        function updateChartType(chartNum) {
+            console.log('Updating chart type for chart ' + chartNum);
+            if (chartNum === 4) {
+                const typeSelect = document.getElementById('chartType4');
+                const chartType = typeSelect ? typeSelect.value : 'line';
+                
+                if (chartType === 'pie') {
+                    const trace = {
+                        labels: ['Solar Generated', 'Grid Consumption'],
+                        values: [650, 450],
+                        type: 'pie',
+                        marker: { colors: ['#f59e0b', '#6366f1'] }
+                    };
+                    const layout = {
+                        margin: { l: 20, r: 20, t: 20, b: 20 },
+                        paper_bgcolor: 'white'
+                    };
+                    Plotly.newPlot('chart4', [trace], layout, { responsive: true, displayModeBar: false });
+                } else {
+                    initChart4();
+                }
+            } else if (chartNum === 7) {
+                initChart7();
+            } else if (chartNum === 10) {
+                const typeSelect = document.getElementById('chartType10');
+                const chartType = typeSelect ? typeSelect.value : 'pie';
+                
+                if (chartType === 'bar') {
+                    const categories = ['Solar', 'Wind', 'Balancing', 'Validation', 'Trading'];
+                    const values = [450, 320, 280, 150, 47];
+                    const trace = {
+                        x: categories,
+                        y: values,
+                        type: 'bar',
+                        marker: { color: '#6366f1' }
+                    };
+                    const layout = {
+                        xaxis: { title: 'Category', showgrid: false },
+                        yaxis: { title: 'ENRG Tokens', showgrid: true },
+                        margin: { l: 60, r: 30, t: 20, b: 80 },
+                        plot_bgcolor: '#f8fafc',
+                        paper_bgcolor: 'white'
+                    };
+                    Plotly.newPlot('chart10', [trace], layout, { responsive: true, displayModeBar: false });
+                } else {
+                    initChart10();
+                }
+            }
+        }
+        
+        function updateMetric(chartNum) {
+            console.log('Updating metric for chart ' + chartNum);
+            if (chartNum === 5) {
+                const metricSelect = document.getElementById('metric5');
+                const metric = metricSelect ? metricSelect.value : 'mae';
+                
+                if (metric === 'rmse') {
+                    const period = document.getElementById('period5').value;
+                    const models = ['LSTM Model', 'ARIMA Model', 'Prophet Model', 'Ensemble'];
+                    let rmse;
+                    
+                    if (period === 'Last 30 Days') {
+                        rmse = [68, 82, 75, 58];
+                    } else if (period === 'Last Year') {
+                        rmse = [52, 63, 58, 45];
+                    } else {
+                        rmse = [62, 73, 68, 51];
+                    }
+                    
+                    const trace = {
+                        x: models,
+                        y: rmse,
+                        type: 'bar',
+                        marker: { color: '#8b5cf6' }
+                    };
+                    const layout = {
+                        xaxis: { title: 'Forecast Model', showgrid: false },
+                        yaxis: { title: 'Root Mean Square Error (MW)', showgrid: true },
+                        margin: { l: 60, r: 30, t: 20, b: 80 },
+                        plot_bgcolor: '#f8fafc',
+                        paper_bgcolor: 'white'
+                    };
+                    Plotly.newPlot('chart5', [trace], layout, { responsive: true, displayModeBar: false });
+                } else {
+                    initChart5();
+                }
+            } else if (chartNum === 19) {
+                const metricSelect = document.getElementById('metric19');
+                const metric = metricSelect ? metricSelect.value : 'tps';
+                
+                if (metric === 'latency') {
+                    const nodeType = document.getElementById('nodeType19').value;
+                    let metrics, latency;
+                    
+                    if (nodeType === 'Parachain Nodes') {
+                        metrics = ['Parachain Nodes'];
+                        latency = [78];
+                    } else if (nodeType === 'Compare Both') {
+                        metrics = ['DAG Nodes', 'Parachain Nodes'];
+                        latency = [42, 78];
+                    } else {
+                        metrics = ['DAG Nodes'];
+                        latency = [42];
+                    }
+                    
+                    const trace = {
+                        x: metrics,
+                        y: latency,
+                        type: 'bar',
+                        marker: { color: ['#f59e0b', '#ef4444'] }
+                    };
+                    const layout = {
+                        xaxis: { title: 'Node Type', showgrid: false },
+                        yaxis: { title: 'Average Latency (ms)', showgrid: true },
+                        margin: { l: 60, r: 30, t: 20, b: 80 },
+                        plot_bgcolor: '#f8fafc',
+                        paper_bgcolor: 'white'
+                    };
+                    Plotly.newPlot('chart19', [trace], layout, { responsive: true, displayModeBar: false });
+                } else if (metric === 'gas') {
+                    const nodeType = document.getElementById('nodeType19').value;
+                    let metrics, gas;
+                    
+                    if (nodeType === 'Parachain Nodes') {
+                        metrics = ['Parachain Nodes'];
+                        gas = [0.0041];
+                    } else if (nodeType === 'Compare Both') {
+                        metrics = ['DAG Nodes', 'Parachain Nodes'];
+                        gas = [0.0023, 0.0041];
+                    } else {
+                        metrics = ['DAG Nodes'];
+                        gas = [0.0023];
+                    }
+                    
+                    const trace = {
+                        x: metrics,
+                        y: gas,
+                        type: 'bar',
+                        marker: { color: ['#10b981', '#06b6d4'] }
+                    };
+                    const layout = {
+                        xaxis: { title: 'Node Type', showgrid: false },
+                        yaxis: { title: 'Gas Usage (ENRG)', showgrid: true },
+                        margin: { l: 60, r: 30, t: 20, b: 80 },
+                        plot_bgcolor: '#f8fafc',
+                        paper_bgcolor: 'white'
+                    };
+                    Plotly.newPlot('chart19', [trace], layout, { responsive: true, displayModeBar: false });
+                } else {
+                    initChart19();
+                }
+            }
+        }
+        
+        function animateFlows() {
+            console.log('Animating energy flows');
+            const mapDiv = document.getElementById('chart9');
+            mapDiv.innerHTML = '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-size: 1.2rem;"><div style="text-align: center;"><i class="fas fa-sync fa-spin fa-3x mb-3"></i><p>Animating Energy Flows</p><p style="font-size: 0.9rem; opacity: 0.8;">Real-time trading visualization active</p></div></div>';
+            setTimeout(function() { initChart9(); }, 2000);
+        }
+        
+        function highlightThreshold() {
+            console.log('Highlighting threshold');
+            initChart13();
+        }
+        
+        function updateConstraints() {
+            console.log('Updating constraints');
+            initChart20();
+        }
+        
+        function simulateTrade() {
+            console.log('Simulating trade');
+            initChart20();
+        }
+        
+        function adjustAlertThreshold() {
+            console.log('Adjusting alert threshold');
+            initChart21();
+        }
+        
+        function overlayPrices() {
+            console.log('Overlaying prices');
+            initChart17();
+        }
+        
+        function sortLeaderboard() {
+            const sortBy = document.getElementById('sortBy16').value;
+            console.log('Sorting leaderboard by ' + sortBy);
+        }
+        
+        // Initialize all charts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing EnergiDot Dashboard...');
+            console.log('Loading data from: NREL, OPSD, EIA, ENTSO-E, NOAA, Copernicus, Pecan Street, Open Charge Map');
+            
+            // Tab 1 charts
+            initChart1();
+            initChart2();
+            initChart3();
+            initChart4();
+            initChart5();
+            initChart6();
+            
+            // Tab 2 charts
+            initChart7();
+            initChart8();
+            initChart9();
+            initChart10();
+            initChart11();
+            initChart12();
+            initChart13();
+            
+            // Tab 3 charts
+            initChart14();
+            initChart15();
+            initChart17();
+            
+            // Tab 4 charts
+            initChart18();
+            initChart19();
+            initChart20();
+            initChart21();
+            
+            console.log('Dashboard initialization complete!');
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const chartIds = ['chart1', 'chart2', 'chart3', 'chart4', 'chart5', 'chart6', 
+                             'chart7', 'chart8', 'chart10', 'chart11', 'chart12', 'chart13',
+                             'chart14', 'chart15', 'chart17', 'chart18', 'chart19', 'chart20', 'chart21'];
+            
+            chartIds.forEach(function(id) {
+                const element = document.getElementById(id);
+                if (element && element.data) {
+                    Plotly.Plots.resize(element);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

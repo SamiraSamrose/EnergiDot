@@ -1,0 +1,67 @@
+## STEP 9: Root Package Configuration
+
+### Path: `package.json`
+
+{
+  "name": "energidot",
+  "version": "1.0.0",
+  "description": "DePIN + DAG Energy Grid Management Parachain on Polkadot",
+  "private": true,
+  "scripts": {
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend/api-gateway && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend/api-gateway && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:all": "npm run build:substrate && npm run build:backend && npm run build:frontend",
+    "build:substrate": "cd backend/substrate-node && cargo build --release",
+    "build:backend": "cd backend/api-gateway && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "test:all": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend/api-gateway && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "test:substrate": "cd backend/substrate-node && cargo test",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:build": "docker-compose build",
+    "setup:db": "bash scripts/setup-db.sh",
+    "setup:keys": "bash scripts/generate-keys.sh",
+    "health": "bash scripts/health-check.sh",
+    "deploy:parachain": "bash scripts/deploy-parachain.sh",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend/api-gateway && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "clean": "npm run clean:backend && npm run clean:frontend && npm run clean:substrate",
+    "clean:backend": "cd backend/api-gateway && rm -rf node_modules dist",
+    "clean:frontend": "cd frontend && rm -rf node_modules dist",
+    "clean:substrate": "cd backend/substrate-node && cargo clean"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.1",
+    "prettier": "^3.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/energidot.git"
+  },
+  "keywords": [
+    "polkadot",
+    "substrate",
+    "blockchain",
+    "energy",
+    "depin",
+    "dag",
+    "web3",
+    "renewable-energy",
+    "parachain"
+  ],
+  "author": "EnergiDot Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
