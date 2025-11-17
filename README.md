@@ -1,6 +1,6 @@
 # EnergiDot – DePIN + DAG Energy Grid Management Parachain
 
-A production-ready Polkadot parachain implementation for decentralized energy grid management, combining DePIN (Decentralized Physical Infrastructure Networks) with DAG-based consensus for real-time energy trading and grid coordination.
+A Polkadot parachain implementation for decentralized energy grid management, combining DePIN (Decentralized Physical Infrastructure Networks) with DAG-based consensus for real-time energy trading and grid coordination.
 
 ## Overview
 
